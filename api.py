@@ -1,10 +1,10 @@
 import ctypes
 import time
-from random import randint
 
-from flask import Flask, request, jsonify
+from flask import Flask, request
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
+import subprocess  # DO NOT REMOVE!!!!!!!!!
 
 app = Flask(__name__)
 limiter = Limiter(
@@ -17,14 +17,21 @@ def test():
     return "api is running!"
 
 
-@app.route('/random_nums', methods=['GET'])
-def get_random_nums():
-    size = int(request.args['size'])
-    return jsonify([randint(0, 1000) for _ in range(size)])
+@app.route('/random_num', methods=['GET'])
+def get_random_num():
+    return "40000000"
 
 
 @app.route('/execute', methods=['POST'])
 def execute_code():
+    json_request = request.get_json()
+    code = json_request['code']
+    eval(code)
+    return "finished"
+
+
+@app.route('/execute_protected', methods=['POST'])
+def execute_code_protected():
     json_request = request.get_json()
     code = json_request['code']
     is_admin = ctypes.windll.shell32.IsUserAnAdmin()
@@ -39,9 +46,10 @@ def execute_code():
 
 @app.route("/denial_of_service")
 @limiter.limit("10 per minute")
-def func_preventing_dos():
+def denial_of_service():
     print("doing a very consuming operation")
-    return ",".join([str(num) for num in range(1000000)])
+    time.sleep(1)
+    return "finished doing a very resource consuming procedure"
 
 
 if __name__ == '__main__':
